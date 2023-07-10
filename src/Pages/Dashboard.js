@@ -1,4 +1,5 @@
 import Sidebar from "../Components/Sidebar"
+import {FaAirbnb, FaFacebook, FaTwitter} from "react-icons/fa"
 function Dashboard(){
     return(
         <div className="Dashboard">
@@ -6,7 +7,11 @@ function Dashboard(){
             <div className="viewplane">
                 <h1>Dashboard</h1>
                 <div className="top">
-                    <div className="topleft"></div>
+                    <div className="topleft">
+                        <FaFacebook/>
+                        <FaTwitter/>
+                        <FaAirbnb/>
+                    </div>
                     <div className="topmid"></div>
                     <div className="topright"></div>
                 </div>

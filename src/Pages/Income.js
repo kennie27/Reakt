@@ -7,15 +7,49 @@ import { FormControl } from "react-bootstrap";
 import { useRef } from "react";
 
 import { app } from "../Firebase";
-import { getFirestore } from "firebase/firestore";
+import { collection, deleteDoc, getDocs, getFirestore, query, where, updateDoc } from "firebase/firestore";
 import { doc, setDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router";
+import { useEffect } from "react";
+import swal from "sweetalert";
+
+
 
 function Income() {
   const auth = getAuth();
   const db = getFirestore(app);
   const navigate = useNavigate();
+
+////FETCHING DATA FROM FIRESTORE
+
+    const [IncomeList, setIncomeList] = useState([])
+
+    useEffect(() => {
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          const UserId = user.uid
+
+          const FetchData = async () => {
+            let IncomeItem = []
+            const queryDocument = query(
+              collection(db, "Income-data"), where("UserId", "==", UserId)
+            )
+              const querySnapShot = await getDocs(queryDocument)
+
+              querySnapShot.forEach((IncomeDoc) => {
+                IncomeItem.push({ Id: IncomeDoc.Id, ...IncomeDoc.data() })
+                setIncomeList([...IncomeItem])
+              })
+          }
+          FetchData()
+        }
+      })
+    })
+
+
+
+    
 
   onAuthStateChanged(auth, (user) => {
     if (!user) {
@@ -27,28 +61,94 @@ function Income() {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
+  // UPDATE MODAL //
+
+  const [update, updateShow] = useState(false);
+  const handleUpdateClose = () => updateShow(false)
+  const handleUpdateShow = () => updateShow(true)
+
+  function updateIncome(IncomeDocId){
+    handleUpdateShow()
+    const docId = IncomeDocId
+
+    window.updateIncome = function(){
+       const IncomeName = IncomeNameRef.current.value;
+       const IncomeQuantity = IncomeQuantityRef.current.value;
+       const IncomeAmount = IncomeAmountRef.current.value;
+       const Date = DateRef.current.value;
+
+       const updateIncome = doc(db, 'Income-data', docId)
+       updateDoc(updateIncome, {
+         IncomeName: IncomeName,
+            IncomeQuantity: IncomeQuantity,
+            IncomeAmount: IncomeAmount,
+            Date: Date,
+          })
+          .then(() => {
+            window.location.reload()
+          })
+    }
+
+  }
+
   const IncomeNameRef = useRef();
   const IncomeQuantityRef = useRef();
   const IncomeAmountRef = useRef();
+  const DateRef = useRef()
 
   function setDocument() {
     const IncomeName = IncomeNameRef.current.value;
     const IncomeQuantity = IncomeQuantityRef.current.value;
     const IncomeAmount = IncomeAmountRef.current.value;
+    const Date = DateRef.current.value;
 
-    let UserId;
 
     onAuthStateChanged(auth, (user) => {
-      UserId = user.uid;
-    });
+    if(user){
+      const UserId = user.uid
 
-    setDoc(doc(db, "Income-Data", UserId), {
-      UserId: UserId,
-      IncomeName: IncomeName,
-      IncomeQuantity: IncomeQuantity,
-      IncomeAmount: IncomeAmount,
+      const newIncome = doc(collection(db, 'Income-data'))
+
+          setDoc(newIncome, {
+            UserId: UserId,
+            IncomeDocId: newIncome.id,
+            IncomeName: IncomeName,
+            IncomeQuantity: IncomeQuantity,
+            IncomeAmount: IncomeAmount,
+            Date: Date,
+          })
+          .then(() => {
+            window.location.reload()
+          })
+
+    }
     });
   }
+
+    function deleteIncome(IncomeDocId) {
+      const docid = IncomeDocId;
+
+      swal({
+        title: "Are you sure?",
+        text: "Once deleted, you will not be able to recover this imaginary file!",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+      }).then((willDelete) => {
+        if (willDelete) {
+          deleteDoc(doc(db, "Income-data", docid)).then(() => {
+            swal("deleted", "", "success");
+            swal(`your income has been deleted`, { icon: "success" }).then(
+              () => {
+                window.location.reload();
+              }
+            );
+          });
+        } else {
+          swal("cancelled");
+        }
+      });
+    }
 
   return (
     <div className="Income">
@@ -68,15 +168,56 @@ function Income() {
           <option value={"three"}>three</option>
         </select>
         <FormControl ref={IncomeNameRef} type="text" placeholder="IncomeName" />
-        <FormControl ref={IncomeQuantityRef} type="text" placeholder="IncomeQuantity" />
-        <FormControl ref={IncomeAmountRef} type="text" placeholder="IncomeAmount" />
-        <FormControl type="date" placeholder="Transaction Date" />
+        <FormControl
+          ref={IncomeQuantityRef}
+          type="text"
+          placeholder="IncomeQuantity"
+        />
+        <FormControl
+          ref={IncomeAmountRef}
+          type="text"
+          placeholder="IncomeAmount"
+        />
+        <FormControl ref={DateRef} type="date" placeholder="Date" />
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>
             Close
           </Button>
           <Button variant="primary" onClick={setDocument}>
             Save Changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    
+
+      <Modal show={update} onHide={handleUpdateClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>update Income</Modal.Title>
+        </Modal.Header>
+        <select>
+          <option value={"select"}> Select Items </option>
+          <option value={"one"}>one</option>
+          <option value={"two"}>two</option>
+          <option value={"three"}>three</option>
+        </select>
+        <FormControl ref={IncomeNameRef} type="text" placeholder="IncomeName" />
+        <FormControl
+          ref={IncomeQuantityRef}
+          type="text"
+          placeholder="IncomeQuantity"
+        />
+        <FormControl
+          ref={IncomeAmountRef}
+          type="text"
+          placeholder="IncomeAmount"
+        />
+        <FormControl ref={DateRef} type="date" placeholder="Date" />
+        <Modal.Footer>
+          <Button variant="secondary" onClick={ handleUpdateClose}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={window.updateIncome}>
+            Update
           </Button>
         </Modal.Footer>
       </Modal>
@@ -90,23 +231,30 @@ function Income() {
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Jacob</td>
-            <td>Thornton</td>
-            <td>@fat</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td colSpan={2}>Larry the Bird</td>
-            <td>@twitter</td>
-          </tr>
+          {IncomeList.map((IncomeItem) => (
+            <tr key={Math.random()}>
+              <td>{IncomeItem.IncomeName}</td>
+              <td>{IncomeItem.IncomeAmount}</td>
+              <td>{IncomeItem.IncomeQuantity}</td>
+              <td>{IncomeItem.Date}</td>
+              <td>
+                <Button
+                  variant="danger"
+                  onClick={() => deleteIncome(IncomeItem.IncomeDocId)}
+                >
+                  delete
+                </Button>
+              </td>
+              <td>
+                <Button
+                  variant="primary"
+                  onClick={() => updateIncome(IncomeItem.IncomeDocId)}
+                >
+                  update
+                </Button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </Table>
     </div>

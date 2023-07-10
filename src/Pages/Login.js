@@ -34,10 +34,10 @@ function Login() {
         
       });
   }
+  
     return (
-      <div className="Login">
-      
-      
+      <div className="Login1">
+        <div className="Login">
           <Form.Group className="mb-3" controlId="formBasicEmail">
             <Form.Label>Email address</Form.Label>
             <Form.Control
@@ -46,7 +46,7 @@ function Login() {
               placeholder="Enter email"
             />
             <Form.Text className="text-muted">
-              <span> We'll never share your email with anyone else.</span>
+             
             </Form.Text>
           </Form.Group>
 
@@ -62,7 +62,7 @@ function Login() {
           <Button variant="primary" type="submit" onClick={signin}>
             Submit
           </Button>
-      
+        </div>
       </div>
     );
 }

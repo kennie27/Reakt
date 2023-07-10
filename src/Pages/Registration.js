@@ -3,6 +3,7 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 
 import { app } from "../Firebase";
+// import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router";
 
@@ -19,6 +20,8 @@ function Registration() {
     const email = emailRef.current.value
     const password = passwordRef.current.value
     const Name = NameRef.current.value
+
+
     const auth = getAuth();
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
